@@ -351,6 +351,12 @@ nav ul a span {
   padding: 16px 32px;
 }
 
+.todoListPage span.errorMsg {
+  margin: 4px 0 16px 0;
+  font-size: 0.875rem;
+  color: red;
+}
+
 @media (max-width: 576px) {
   .todoListPage {
     background-image: linear-gradient(175deg, #FFD370 100%, #fff 0%);
@@ -449,6 +455,8 @@ nav ul a span {
 
 .todoList_list .todoList_items .todoList_item {
   margin-bottom: 8px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .todoList_list .todoList_items .todoList_label {
