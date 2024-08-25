@@ -95,6 +95,7 @@ const CheckoutToken=async ()=>{
       if (output!='' && output.split('=')[0]=="hexschooltoken")
       {
            CheckToken.value= output.split('=')[1];
+           console.log( CheckToken.value);
            const res = await axios.get(`${ApiUrl}users/checkout`, {
                           headers: {
                               Authorization:  CheckToken.value,
@@ -156,7 +157,7 @@ const PostTodosConten=ref({
 const PostTodosContenSend=async ()=>{
 
   try {
-  
+   
     const requiredALL=ref(true);PostTodosContenrequired.value=false; 
      //every檢查是否有空白
      const isEmpty = Object.values(PostTodosConten.value).every(value => value !== '');
@@ -166,7 +167,7 @@ const PostTodosContenSend=async ()=>{
          {PostTodosContenrequired.value=false; alert(`尚未取得Token`);} 
    
      if (requiredALL.value)
-      {
+      { console.log("PostTodosConten",PostTodosConten.value);
            const res = await axios.post(`${ApiUrl}todos`,PostTodosConten.value, {
                           headers: {
                               Authorization:  CheckToken.value,
@@ -174,7 +175,7 @@ const PostTodosContenSend=async ()=>{
                       });
            if (res.data.status)
                 {
-                  PostTodosConten.value=[];
+                  PostTodosConten.value={ ...PostTodosConten};
                   GetTodosList();
                 }
       }
@@ -197,6 +198,7 @@ const PutTodosConten=(todo)=>{
 const PutTodosContenSend=async ()=>{
 
 try {
+ 
    const res = await axios.put(`${ApiUrl}todos/${PutTodosid.value}`,PostTodosConten.value, {
                           headers: {
                               Authorization:  CheckToken.value,
@@ -204,10 +206,11 @@ try {
                       });
            if (res.data.status)
                 {
+                  ButtonStatus.value=true;
+                  PostTodosConten.value={ ...PostTodosConten};
                   alert(`${res.data.message}`);
                   GetTodosList();
-                  ButtonStatus.value=true;
-                  PostTodosConten.value.content='';
+                  
                 }
 
  
@@ -229,7 +232,7 @@ try {
                       });
            if (res.data.status)
                 {
-                  alert(`${res.data.message}`);
+                 // alert(`${res.data.message}`);
                   GetTodosList();
                 }
 
@@ -245,7 +248,7 @@ try {
 const PatchTodosContenSend=async (todo)=>{
 
 try {
-  console.log(CheckToken.value);
+
   const EditConten={ ...todo}
    const res = await axios.patch(`${ApiUrl}todos/${EditConten.id}/toggle`,{}, {
                           headers: {
@@ -362,7 +365,8 @@ const SingOut=()=>{
           <li><a href="#" @click.prevent="GetselectStaus(true)">已完成</a></li>
         </ul>
         <div class="todoList_items">
-          <ul class="todoList_item">
+          <span v-if="!filterTodosListData.length>0" >「目前尚無待辦事項」</span>
+          <ul class="todoList_item" v-if="filterTodosListData.length>0">
             <li v-for="todo in filterTodosListData" :key="todo.id">
               <label class="todoList_label">
                 <input class="todoList_input" v-model="todo.status" type="checkbox" value="true" @change.prevent="PatchTodosContenSend(todo)">
@@ -377,7 +381,7 @@ const SingOut=()=>{
              
             </li>
           </ul>
-          <div class="todoList_statistics">
+          <div class="todoList_statistics" v-if="filterTodosListData.length>0">
             <p> {{ GetTodosListData.filter(x=>x.status==true).length }} 個已完成項目</p>
           </div>
         </div>
