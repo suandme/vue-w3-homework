@@ -2,7 +2,7 @@
 import router from '@/router';
 import axios from 'axios';
 import { computed, onMounted, ref} from "vue";
-
+import TodoList from  '@/components/TodoList.vue'
 //API
 const ApiUrl="https://todolist-api.hexschool.io/";
 const cookieName='hexschooltoken';
@@ -51,10 +51,13 @@ const CheckoutToken=async ()=>{
 const TodosResMsg=ref('')
 const GetTodosListData=ref([])
 const filterTodosListData=ref([])
+const NowGetselectStaus=ref(0)
 const GetselectStaus= (bools)=>{
   filterTodosListData.value= GetTodosListData.value;
-  if (typeof(bools)!=='undefined')
-    filterTodosListData.value= GetTodosListData.value.filter(x=>x.status==bools);
+  NowGetselectStaus.value=bools;
+  if (bools>0)
+     filterTodosListData.value= GetTodosListData.value.filter(x=>x.status==(bools==2));
+   
 }
 const GetTodosList=async ()=>{
   try {
@@ -88,6 +91,7 @@ const PostTodosContenSend=async ()=>{
 
   try {
    
+    NowGetselectStaus.value=0;
     const requiredALL=ref(true);PostTodosContenrequired.value=false; 
      //every檢查是否有空白
      const isEmpty = Object.values(PostTodosConten.value).every(value => value !== '');
@@ -105,7 +109,7 @@ const PostTodosContenSend=async ()=>{
                       });
            if (res.data.status)
                 {
-                  PostTodosConten.value={ ...PostTodosConten};
+                  PostTodosConten.value={ ...PostTodosConten.value};
                   GetTodosList();
                 }
       }
@@ -151,26 +155,25 @@ try {
 
 }
 //7.代辦事項-刪除代辦事項
-const DeleteTodosContenSend=async (todo)=>{
+const DeleteTodosConten=async (todo)=>{
+    try {
+    const EditConten={ ...todo}
+    const res = await axios.delete(`${ApiUrl}todos/${EditConten.id}`, {
+                            headers: {
+                                Authorization:  CheckToken.value,
+                            },
+                        });
+            if (res.data.status)
+                    {
+                    alert(`${res.data.message}`);
+                    GetTodosList();
+                    }
 
-try {
-  const EditConten={ ...todo}
-   const res = await axios.delete(`${ApiUrl}todos/${EditConten.id}`, {
-                          headers: {
-                              Authorization:  CheckToken.value,
-                          },
-                      });
-           if (res.data.status)
-                {
-                  alert(`${res.data.message}`);
-                  GetTodosList();
-                }
-
- 
-  } catch (error) {
-  if (error.response.data!='')
-      TodosResMsg.value="驗證失敗:"+error.response.data.message;
-  }
+    
+    } catch (error) {
+    if (error.response.data!='')
+        TodosResMsg.value="驗證失敗:"+error.response.data.message;
+    }
 
 }
 
@@ -185,7 +188,7 @@ const PatchTodosContenSend=async (todo)=>{
                             },
                         });
             if (res.data.status)
-                    {  PostTodosConten.value={ ...PostTodosConten};
+                    {  PostTodosConten.value={ ...PostTodosConten.value};
                     alert(`${res.data.message}`);
                     GetTodosList();
                     }
@@ -215,7 +218,7 @@ const SingOut=()=>{
     <h1><a href="#">ONLINE TODO LIST</a></h1>
     <ul>
       <li class="todo_sm">
-        <RouterLink to="/TodoListPageView" ><span>{{ SignInUser }} 的代辦</span></RouterLink> 
+        <RouterLink to="/Todo" ><span>{{ SignInUser }} 的代辦</span></RouterLink> 
       </li>
       <li>
         <a href="#" @click.prevent="SingOut()">登出</a></li>
@@ -233,27 +236,15 @@ const SingOut=()=>{
       <span class="errorMsg" >{{TodosResMsg}}</span>
       <div class="todoList_list">
         <ul class="todoList_tab">
-          <li><a href="#" class="active" @click.prevent="GetselectStaus()">全部</a></li>
-          <li><a href="#" @click.prevent="GetselectStaus(false)">待完成</a></li>
-          <li><a href="#" @click.prevent="GetselectStaus(true)">已完成</a></li>
+          <li><a href="#" :class="NowGetselectStaus==0?'active':''" @click.prevent="GetselectStaus(0)">全部</a></li>
+          <li><a href="#" :class="NowGetselectStaus==1?'active':''" @click.prevent="GetselectStaus(1)">待完成</a></li>
+          <li><a href="#"  :class="NowGetselectStaus==2?'active':''" @click.prevent="GetselectStaus(2)">已完成</a></li>
         </ul>
         <div class="todoList_items">
           <span v-if="!filterTodosListData.length>0" >「目前尚無待辦事項」</span>
-          <ul class="todoList_item" v-if="filterTodosListData.length>0">
-            <li v-for="todo in SortTodosListData" :key="todo.id">
-              <label class="todoList_label">
-                <input class="todoList_input" v-model="todo.status" type="checkbox" value="true" @change.prevent="PatchTodosContenSend(todo)">
-                <span>{{todo.content}}</span>
-              </label>
-              <a href="#" @click.prevent="PutTodosConten(todo)" title="編輯">
-                <i class="fa-solid fa-pen-to-square"></i> 
-              </a>
-              <a href="#" @click.prevent="DeleteTodosContenSend(todo)"  title="刪除">
-                <i class="fa-solid fa-trash"></i>
-              </a>
-             
-            </li>
-          </ul>
+          <TodoList :list-todos="SortTodosListData" 
+          v-on:emit-edit="PutTodosConten" v-on:emit-del="DeleteTodosConten" />      
+         
           <div class="todoList_statistics" v-if="filterTodosListData.length>0">
             <p> {{ GetTodosListData.filter(x=>x.status==true).length }} 個已完成項目</p>
           </div>
