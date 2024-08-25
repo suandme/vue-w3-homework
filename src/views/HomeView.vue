@@ -12,22 +12,23 @@ const signUpPageData=ref({
   "password": '',
   "nickname": ''
 })
+const signUprequired=ref(false)
 const signUpResMsg=ref('')
 const signUpPageCkpassword=ref('')
 const signUpPageAdd= ()=>
 {
     const requiredALL=ref(true);
-    signUpResMsg.value="";
+    signUpResMsg.value="";signUprequired.value=false;
      //every檢查是否有空白
      const isEmpty = Object.values(signUpPageData.value).every(value => value !== '');
       if (!isEmpty)
-        {requiredALL.value=false; alert("您尚未填寫資料");} 
+        {requiredALL.value=false;signUprequired.value=true; } 
       if (signUpPageData.value.email!=='' &&!emailPattern.test(signUpPageData.value.email))
         {requiredALL.value=false; alert("E-mail格式錯誤");} 
       if (!signUpPageCkpassword.value==signUpPageData.value.password)
         { requiredALL.value=false;  alert("您輸入的密碼不正確");}
       if (requiredALL.value)
-      {
+      { 
           axios.post(`${ApiUrl}users/sign_up`,signUpPageData.value)
                     .then((res)=>
                       {
@@ -42,6 +43,7 @@ const signUpPageAdd= ()=>
             
 }
 //2.登入會員
+const SignInrequired=ref(false);
 const SignInResMsg=ref('');
 const SignIntoken=ref('');
 const SignInpDataObject=ref({
@@ -49,13 +51,15 @@ const SignInpDataObject=ref({
     password: '',
 });
 const SignInSend=()=>{
-    const requiredALL=ref(true);
+  
+    const requiredALL=ref(true);SignInrequired.value=false; 
     //every檢查是否有空白
     const isEmpty = Object.values(SignInpDataObject.value).every(value => value !== '');
     if (!isEmpty)
-    {requiredALL.value=false; alert("您尚未填寫資料");} 
+    {requiredALL.value=false;SignInrequired.value=true; } 
     if (SignInpDataObject.value.email!=='' && !emailPattern.test(SignInpDataObject.value.email))
       {requiredALL.value=false; alert("E-mail格式錯誤");} 
+     
     if (requiredALL.value)
     {
       axios.post(`${ApiUrl}users/sign_in`,SignInpDataObject.value)
@@ -70,11 +74,10 @@ const SignInSend=()=>{
                   const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     document.cookie = `hexschooltoken=${SignIntoken.value}; expires=${tomorrow.toUTCString()}`;
-                    alert(`歡迎 ${res.data.nickname} 登入成功`)
-
+                  
                 }
             }).catch((error)=>{
-              if (error.response.data!='')
+              if (error.response?.data)
                  SignInResMsg.value="登入失敗:"+error.response.data.message;
             })
     }
@@ -88,27 +91,178 @@ const CheckoutToken=async ()=>{
       const output =document.cookie;
       if (output!='' && output.split('=')[0]=="hexschooltoken")
       {
-        CheckToken.value= output.split('=')[1];
-         console.log(output.split('=')[1]);
-          const res = await axios.get(`${ApiUrl}users/checkout`, {
+           CheckToken.value= output.split('=')[1];
+           const res = await axios.get(`${ApiUrl}users/checkout`, {
                           headers: {
                               Authorization:  CheckToken.value,
                           },
-                     });
+                      });
            if (res.data.status)
-                  CheckoutResMsg.value = '驗證成功';
+           {
+            CheckoutResMsg.value = '驗證成功';
+            GetTodosList();
+           }
+               
       }
      else{
         alert(`尚未取得Token`)
      }
-  } catch (error) {
+    } catch (error) {
     if (error.response.data!='')
          CheckoutResMsg.value="驗證失敗:"+error.response.data.message;
-      
-  }
+    }
       
 }
 
+//4.代辦事項-取得所有代辦事項
+const TodosResMsg=ref('')
+const GetTodosListData=ref([])
+const GetTodosListDataStatus= (bools)=>{
+  GetTodosListData.value.filter(x=>x.Status==bools);
+  console.log("bools", GetTodosListData.value);
+}
+const GetTodosList=async ()=>{
+  try {
+       if (CheckToken.value!='')
+      {
+           const res = await axios.get(`${ApiUrl}todos`, {
+                          headers: {
+                              Authorization:  CheckToken.value,
+                          },
+                      });
+           if (res.data.status)
+                {
+                  GetTodosListData.value=res.data.data;
+                  console.log("todolist", GetTodosListData.value);
+                }
+      }
+     else{
+        alert(`尚未取得Token`)
+     }
+    } catch (error) {
+    if (error.response.data!='')
+         TodosResMsg.value="驗證失敗:"+error.response.data.message;
+    }
+
+};
+//5.代辦事項-新增代辦事項
+const PostTodosContenrequired=ref(false)
+const PostTodosConten=ref({
+  content: ''
+})
+
+const PostTodosContenSend=async ()=>{
+
+  try {
+   
+    const requiredALL=ref(true);PostTodosContenrequired.value=false; 
+     //every檢查是否有空白
+     const isEmpty = Object.values(PostTodosConten.value).every(value => value !== '');
+    if (!isEmpty)
+        {requiredALL.value=false;PostTodosContenrequired.value=true;alert(`請輸入代辦事項`); } 
+      if (CheckToken.value=='')
+         {PostTodosContenrequired.value=false; alert(`尚未取得Token`);} 
+   
+     if (requiredALL.value)
+      {
+           const res = await axios.post(`${ApiUrl}todos`,PostTodosConten.value, {
+                          headers: {
+                              Authorization:  CheckToken.value,
+                          },
+                      });
+           if (res.data.status)
+                {
+                  PostTodosConten.value=[];
+                  GetTodosList();
+                }
+      }
+    
+    } catch (error) {
+    if (error.response.data!='')
+        TodosResMsg.value="驗證失敗:"+error.response.data.message;
+    }
+
+}
+//6..代辦事項-更新代辦事項
+const ButtonStatus=ref(true);
+const PutTodosid=ref(0);
+const PutTodosConten=(todo)=>{
+  const EditConten={ ...todo}
+   PostTodosConten.value.content=EditConten.content;
+   PutTodosid.value=EditConten.id;
+   ButtonStatus.value=false;
+}
+const PutTodosContenSend=async ()=>{
+
+try {
+   const res = await axios.put(`${ApiUrl}todos/${PutTodosid.value}`,PostTodosConten.value, {
+                          headers: {
+                              Authorization:  CheckToken.value,
+                          },
+                      });
+           if (res.data.status)
+                {
+                  alert(`${res.data.message}`);
+                  GetTodosList();
+                  ButtonStatus.value=true;
+                  PostTodosConten.value.content='';
+                }
+
+ 
+  } catch (error) {
+  if (error.response.data!='')
+      TodosResMsg.value="驗證失敗:"+error.response.data.message;
+  }
+
+}
+//7.代辦事項-刪除代辦事項
+const DeleteTodosContenSend=async (todo)=>{
+
+try {
+  const EditConten={ ...todo}
+   const res = await axios.delete(`${ApiUrl}todos/${EditConten.id}`, {
+                          headers: {
+                              Authorization:  CheckToken.value,
+                          },
+                      });
+           if (res.data.status)
+                {
+                  alert(`${res.data.message}`);
+                  GetTodosList();
+                }
+
+ 
+  } catch (error) {
+  if (error.response.data!='')
+      TodosResMsg.value="驗證失敗:"+error.response.data.message;
+  }
+
+}
+
+//8.代辦事項-切換代辦事項狀態
+const PatchTodosContenSend=async (todo)=>{
+
+try {
+  console.log(CheckToken.value);
+  const EditConten={ ...todo}
+   const res = await axios.patch(`${ApiUrl}todos/${EditConten.id}/toggle`,{}, {
+                          headers: {
+                              Authorization:  CheckToken.value,
+                          },
+                      });
+           if (res.data.status)
+                {
+                  alert(`${res.data.message}`);
+                  GetTodosList();
+                }
+
+ 
+  } catch (error) {
+  if (error.response.data!='')
+      TodosResMsg.value="驗證失敗:"+error.response.data.message;
+  }
+
+}
 </script>
 
 <template>
@@ -126,9 +280,10 @@ const CheckoutToken=async ()=>{
         <h2 class="formControls_txt">最實用的線上代辦事項服務</h2>
         <label class="formControls_label" for="email">Email</label>
         <input class="formControls_input" type="text" id="email" name="email" placeholder="請輸入 email" v-model="SignInpDataObject.email" required>
-        <span>此欄位不可留空</span>
+        <span v-if="SignInrequired && SignInpDataObject.email==''" >此欄位不可留空</span>
         <label class="formControls_label" for="pwd">密碼</label>
         <input class="formControls_input" type="password" name="pwd" id="pwd" placeholder="請輸入密碼" v-model="SignInpDataObject.password" required>
+        <span v-if="SignInrequired && SignInpDataObject.password==''" >此欄位不可留空</span>
         <input class="formControls_btnSubmit" type="button" @click="SignInSend" value="登入">
         <a class="formControls_btnLink" href="#signUpPage">註冊帳號</a>
         <span class="errorMsg"  v-text="SignInResMsg"></span>
@@ -152,12 +307,16 @@ const CheckoutToken=async ()=>{
         <h2 class="formControls_txt">註冊帳號</h2>
         <label class="formControls_label" for="email">Email</label>
         <input class="formControls_input" type="text" v-model="signUpPageData.email" id="email" name="email" placeholder="請輸入 email" required>
+        <span v-if="signUprequired && signUpPageData.email==''" >此欄位不可留空</span>
         <label class="formControls_label" for="name">您的暱稱</label>
         <input class="formControls_input" type="text" v-model="signUpPageData.nickname" name="name" id="name" placeholder="請輸入您的暱稱">
+        <span v-if="signUprequired && signUpPageData.nickname==''" >此欄位不可留空</span>
         <label class="formControls_label" for="pwd">密碼</label>
         <input class="formControls_input" type="password" v-model="signUpPageData.password" name="pwd" id="pwd" placeholder="請輸入密碼" required>
+        <span v-if="signUprequired && signUpPageData.password==''" >此欄位不可留空</span>
         <label class="formControls_label" for="pwd">再次輸入密碼</label>
         <input class="formControls_input" type="password" v-model="signUpPageCkpassword" name="pwd" id="pwd" placeholder="請再次輸入密碼" required>
+        <span v-if="signUprequired && signUpPageCkpassword==''" >此欄位不可留空</span>
         <input class="formControls_btnSubmit" type="button" @click="signUpPageAdd" value="註冊帳號">
         <a class="formControls_btnLink" href="#loginPage">登入</a>
         <span class="errorMsg" v-text="signUpResMsg"></span>
@@ -179,76 +338,36 @@ const CheckoutToken=async ()=>{
   <div class="conatiner todoListPage vhContainer">
     <div class="todoList_Content">
       <div class="inputBox">
-        <input type="text" placeholder="請輸入待辦事項">
-        <a href="#">
-          <i class="fa fa-plus"></i>
+        <input type="text" placeholder="請輸入待辦事項" v-model="PostTodosConten.content"
+          @keyup.enter="ButtonStatus? PostTodosContenSend():PutTodosContenSend()">
+        <a href="#" @click.prevent="ButtonStatus? PostTodosContenSend():PutTodosContenSend()">
+          <i :class="ButtonStatus? 'fa fa-plus':'fa-solid fa-pen-to-square' "></i>
         </a>
       </div>
       <div class="todoList_list">
         <ul class="todoList_tab">
           <li><a href="#" class="active">全部</a></li>
-          <li><a href="#">待完成</a></li>
-          <li><a href="#">已完成</a></li>
+          <li><a href="#" @click.prevent="GetTodosListDataStatus(false)">待完成</a></li>
+          <li><a href="#" @click.prevent="GetTodosListDataStatus(true)">已完成</a></li>
         </ul>
         <div class="todoList_items">
           <ul class="todoList_item">
-            <li>
+            <li v-for="todo in GetTodosListData" :key="todo.id">
               <label class="todoList_label">
-                <input class="todoList_input" type="checkbox" value="true">
-                <span>把冰箱發霉的檸檬拿去丟</span>
+                <input class="todoList_input" v-model="todo.status" type="checkbox" value="true" @change.prevent="PatchTodosContenSend(todo)">
+                <span>{{todo.content}}</span>
               </label>
-              <a href="#">
-                <i class="fa fa-times"></i>
+              <a href="#" @click.prevent="PutTodosConten(todo)" title="編輯">
+                <i class="fa-solid fa-pen-to-square"></i> 
               </a>
-            </li>
-            <li>
-              <label class="todoList_label">
-                <input class="todoList_input" type="checkbox" value="true">
-                <span>打電話叫媽媽匯款給我</span>
-              </label>
-              <a href="#">
-                <i class="fa fa-times"></i>
+              <a href="#" @click.prevent="DeleteTodosContenSend(todo)"  title="刪除">
+                <i class="fa-solid fa-trash"></i>
               </a>
-            </li>
-            <li>
-              <label class="todoList_label">
-                <input class="todoList_input" type="checkbox" value="true">
-                <span>整理電腦資料夾</span>
-              </label>
-              <a href="#">
-                <i class="fa fa-times"></i>
-              </a>
-            </li>
-            <li>
-              <label class="todoList_label">
-                <input class="todoList_input" type="checkbox" value="true">
-                <span>繳電費水費瓦斯費</span>
-              </label>
-              <a href="#">
-                <i class="fa fa-times"></i>
-              </a>
-            </li>
-            <li>
-              <label class="todoList_label">
-                <input class="todoList_input" type="checkbox" value="true">
-                <span>約vicky禮拜三泡溫泉</span>
-              </label>
-              <a href="#">
-                <i class="fa fa-times"></i>
-              </a>
-            </li>
-            <li>
-              <label class="todoList_label">
-                <input class="todoList_input" type="checkbox" value="true">
-                <span>約ada禮拜四吃晚餐</span>
-              </label>
-              <a href="#">
-                <i class="fa fa-times"></i>
-              </a>
+             
             </li>
           </ul>
           <div class="todoList_statistics">
-            <p> 5 個已完成項目</p>
+            <p> {{ GetTodosListData.filter(x=>x.status==true).length }} 個已完成項目</p>
           </div>
         </div>
       </div>

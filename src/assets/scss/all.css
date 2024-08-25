@@ -495,7 +495,7 @@ nav ul a span {
   display: block;
   font-size: 14px;
   color: #333333;
-  opacity: 0;
+  opacity: 1;
 }
 
 .todoList_list .todoList_items li:hover a {
