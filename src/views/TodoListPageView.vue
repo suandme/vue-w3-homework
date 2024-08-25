@@ -33,7 +33,6 @@ const CheckoutToken=async ()=>{
                 CheckoutResMsg.value = '驗證成功';
                 GetTodosList();
            }
-               
       }
      else{
 
@@ -177,26 +176,25 @@ try {
 
 //8.代辦事項-切換代辦事項狀態
 const PatchTodosContenSend=async (todo)=>{
+    try {
 
-try {
+    const EditConten={ ...todo}
+    const res = await axios.patch(`${ApiUrl}todos/${EditConten.id}/toggle`,{}, {
+                            headers: {
+                                Authorization:  CheckToken.value,
+                            },
+                        });
+            if (res.data.status)
+                    {  PostTodosConten.value={ ...PostTodosConten};
+                    alert(`${res.data.message}`);
+                    GetTodosList();
+                    }
 
-  const EditConten={ ...todo}
-   const res = await axios.patch(`${ApiUrl}todos/${EditConten.id}/toggle`,{}, {
-                          headers: {
-                              Authorization:  CheckToken.value,
-                          },
-                      });
-           if (res.data.status)
-                {  PostTodosConten.value={ ...PostTodosConten};
-                  alert(`${res.data.message}`);
-                  GetTodosList();
-                }
-
- 
-  } catch (error) {
-  if (error.response.data!='')
-      TodosResMsg.value="驗證失敗:"+error.response.data.message;
-  }
+    
+    } catch (error) {
+    if (error.response.data!='')
+        TodosResMsg.value="驗證失敗:"+error.response.data.message;
+    }
 
 }
 

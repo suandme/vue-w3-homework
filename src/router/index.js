@@ -1,24 +1,24 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'Login',
       component: HomeView
     },
     {
-      path: '/SignUPPageView',
-      name: 'SignUPPageView',
+      path: '/Register',
+      name: 'Register',
       component: () =>import('../views/SignUpPageView.vue')  
     },
     {
-      path: '/TodoListPageView',
-      name: 'TodoListPageView',
-      component: () =>import('../views/TodoListPageView.vue')  
+      path: '/Todo',
+      name: 'Todo',
+      component: () =>import('../views/TodoListPageView.vue') 
     }
   ]
 })

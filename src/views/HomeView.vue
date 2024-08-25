@@ -41,7 +41,7 @@ const SignInSend=()=>{
                   const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     document.cookie = `${cookieName}=${res.data.token}; expires=${tomorrow.toUTCString()}`;
-                  router.push('/TodoListPageView');
+                  router.push('/Todo');
                 }
             }).catch((error)=>{
               if (error.response?.data)
@@ -75,7 +75,7 @@ const SignInSend=()=>{
         <input class="formControls_input" type="password" name="pwd" id="pwd" placeholder="請輸入密碼" v-model="SignInpDataObject.password" required>
         <span v-if="SignInrequired && SignInpDataObject.password==''" >此欄位不可留空</span>
         <input class="formControls_btnSubmit" type="button" @click="SignInSend" value="登入">
-        <RouterLink to="/SignUPPageView" class="formControls_btnLink">註冊帳號</RouterLink> 
+        <RouterLink to="/Register" class="formControls_btnLink">註冊帳號</RouterLink> 
         <span class="errorMsg"  v-text="SignInResMsg"></span>
       </form>
     </div>
