@@ -46,6 +46,7 @@ const signUpPageAdd= ()=>
 const SignInrequired=ref(false);
 const SignInResMsg=ref('');
 const SignIntoken=ref('');
+const SignInUser=ref('');
 const SignInpDataObject=ref({
     email: '',
     password: '',
@@ -68,6 +69,7 @@ const SignInSend=()=>{
               SignInResMsg.value="登入失敗";
                 if (res.data.status)
                 {//exp,token,nickname
+                  SignInUser.value=res.data.nickname;
                   SignInResMsg.value="";
                   SignIntoken.value=res.data.token;
                   //存入cookie
@@ -83,6 +85,7 @@ const SignInSend=()=>{
     }
       
 }
+
 //3.TodolistPage 驗證
 const CheckToken=ref('');
 const CheckoutResMsg=ref('');
@@ -117,9 +120,11 @@ const CheckoutToken=async ()=>{
 //4.代辦事項-取得所有代辦事項
 const TodosResMsg=ref('')
 const GetTodosListData=ref([])
-const GetTodosListDataStatus= (bools)=>{
-  GetTodosListData.value.filter(x=>x.Status==bools);
-  console.log("bools", GetTodosListData.value);
+const filterTodosListData=ref([])
+const GetselectStaus= (bools)=>{
+  filterTodosListData.value= GetTodosListData.value;
+  if (typeof(bools)!=='undefined')
+    filterTodosListData.value= GetTodosListData.value.filter(x=>x.status==bools);
 }
 const GetTodosList=async ()=>{
   try {
@@ -131,10 +136,7 @@ const GetTodosList=async ()=>{
                           },
                       });
            if (res.data.status)
-                {
-                  GetTodosListData.value=res.data.data;
-                  console.log("todolist", GetTodosListData.value);
-                }
+             { filterTodosListData.value= GetTodosListData.value=res.data.data; }
       }
      else{
         alert(`尚未取得Token`)
@@ -154,7 +156,7 @@ const PostTodosConten=ref({
 const PostTodosContenSend=async ()=>{
 
   try {
-   
+  
     const requiredALL=ref(true);PostTodosContenrequired.value=false; 
      //every檢查是否有空白
      const isEmpty = Object.values(PostTodosConten.value).every(value => value !== '');
@@ -263,6 +265,15 @@ try {
   }
 
 }
+
+//9.會員登出
+const SingOut=()=>{
+  GetTodosListData.value=[];
+  filterTodosListData.value=[];
+  CheckToken.value= '';
+  document.cookie = `hexschooltoken=${SignIntoken.value}; max-age=-1`;
+}
+
 </script>
 
 <template>
@@ -331,8 +342,8 @@ try {
   <nav>
     <h1><a href="#">ONLINE TODO LIST</a></h1>
     <ul>
-      <li class="todo_sm"><a href="#"><span>王小明的代辦</span></a></li>
-      <li><a href="#loginPage">登出</a></li>
+      <li class="todo_sm"><a href="#"><span>{{ SignInUser }}的代辦</span></a></li>
+      <li><a href="#loginPage" @click="SingOut">登出</a></li>
     </ul>
   </nav>
   <div class="conatiner todoListPage vhContainer">
@@ -346,13 +357,13 @@ try {
       </div>
       <div class="todoList_list">
         <ul class="todoList_tab">
-          <li><a href="#" class="active">全部</a></li>
-          <li><a href="#" @click.prevent="GetTodosListDataStatus(false)">待完成</a></li>
-          <li><a href="#" @click.prevent="GetTodosListDataStatus(true)">已完成</a></li>
+          <li><a href="#" class="active" @click.prevent="GetselectStaus()">全部</a></li>
+          <li><a href="#" @click.prevent="GetselectStaus(false)">待完成</a></li>
+          <li><a href="#" @click.prevent="GetselectStaus(true)">已完成</a></li>
         </ul>
         <div class="todoList_items">
           <ul class="todoList_item">
-            <li v-for="todo in GetTodosListData" :key="todo.id">
+            <li v-for="todo in filterTodosListData" :key="todo.id">
               <label class="todoList_label">
                 <input class="todoList_input" v-model="todo.status" type="checkbox" value="true" @change.prevent="PatchTodosContenSend(todo)">
                 <span>{{todo.content}}</span>
