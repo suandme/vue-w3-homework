@@ -109,7 +109,7 @@ const PostTodosContenSend=async ()=>{
                       });
            if (res.data.status)
                 {
-                  PostTodosConten.value={ ...PostTodosConten.value};
+                  PostTodosConten.value={ ...PostTodosConten};
                   GetTodosList();
                 }
       }
@@ -215,7 +215,7 @@ const SingOut=()=>{
 <!-- ToDo List -->
 <div id="todoListPage" class="bg-half">
   <nav>
-    <h1><a href="#">ONLINE TODO LIST</a></h1>
+    <h1> <RouterLink to="/Todo" >ONLINE TODO LIST </RouterLink> </h1>
     <ul>
       <li class="todo_sm">
         <RouterLink to="/Todo" ><span>{{ SignInUser }} 的代辦</span></RouterLink> 
