@@ -69,6 +69,7 @@ const GetTodosList=async ()=>{
            if (res.data.status)
              { 
                 filterTodosListData.value= GetTodosListData.value=res.data.data; 
+                GetselectStaus( NowGetselectStaus.value);
              }
     } catch (error) {
     if (error.response.data!='')
@@ -78,6 +79,7 @@ const GetTodosList=async ()=>{
 };
  //排序;最新的在最上面
 const SortTodosListData= computed(() => {
+
      return filterTodosListData.value.sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
  });
 
