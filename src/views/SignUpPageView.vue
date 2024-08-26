@@ -1,4 +1,5 @@
 <script setup>
+import router from '@/router';
 import axios from 'axios';
 import { ref} from "vue";
 
@@ -24,19 +25,27 @@ const signUpPageAdd= ()=>
       if (!isEmpty)
         {requiredALL.value=false;signUprequired.value=true; } 
       if (signUpPageData.value.email!=='' &&!emailPattern.test(signUpPageData.value.email))
-        {requiredALL.value=false; alert("E-mail格式錯誤");} 
-      if (!signUpPageCkpassword.value==signUpPageData.value.password)
-        { requiredALL.value=false;  alert("您輸入的密碼不正確");}
-      if (requiredALL.value)
+        {requiredALL.value=false;signUpResMsg.value="E-mail格式錯誤"; alert("E-mail格式錯誤");} 
+      if (!(signUpPageCkpassword.value.includes(signUpPageData.value.password)))
+        { requiredALL.value=false;  signUpResMsg.value="您輸入的密碼不正確"; alert("您輸入的密碼不正確");}
+        if (requiredALL.value)
       { 
           axios.post(`${ApiUrl}users/sign_up`,signUpPageData.value)
                     .then((res)=>
                       {
                           if (res.data.status)
-                              alert("註冊成功!");
+                          {
+                            alert("註冊成功!");
+                            router.push('/')
+                          }
+                             
                       }).catch((error)=>{
-                        if (error.response.data!='')
+                        if (error.response?.data!='')
+                        {
                           signUpResMsg.value="註冊失敗:"+error.response.data.message;
+                          alert(error.response.data.message);
+                        }
+                          
                     })
 
       }

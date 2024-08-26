@@ -103,7 +103,7 @@ const PostTodosContenSend=async ()=>{
          {PostTodosContenrequired.value=false; alert(`尚未取得Token`);} 
    
      if (requiredALL.value)
-      { 
+      { console.log('add',PostTodosConten.value)
            const res = await axios.post(`${ApiUrl}todos`,PostTodosConten.value, {
                           headers: {
                               Authorization:  CheckToken.value,
@@ -182,7 +182,6 @@ const DeleteTodosConten=async (todo)=>{
 //8.代辦事項-切換代辦事項狀態
 const PatchTodosContenSend=async (todo)=>{
     try {
-
     const EditConten={ ...todo}
     const res = await axios.patch(`${ApiUrl}todos/${EditConten.id}/toggle`,{}, {
                             headers: {
@@ -190,9 +189,9 @@ const PatchTodosContenSend=async (todo)=>{
                             },
                         });
             if (res.data.status)
-                    {  PostTodosConten.value={ ...PostTodosConten.value};
-                    alert(`${res.data.message}`);
-                    GetTodosList();
+                    {  
+                      alert(`${res.data.message}`);
+                      GetTodosList();
                     }
 
     
@@ -245,7 +244,9 @@ const SingOut=()=>{
         <div class="todoList_items">
           <span v-if="!filterTodosListData.length>0" >「目前尚無待辦事項」</span>
           <TodoList :list-todos="SortTodosListData" 
-          v-on:emit-edit="PutTodosConten" v-on:emit-del="DeleteTodosConten" />      
+          v-on:emit-edit="PutTodosConten" 
+          v-on:emit-del="DeleteTodosConten"
+          v-on:emit-patch="PatchTodosContenSend" />      
          
           <div class="todoList_statistics" v-if="filterTodosListData.length>0">
             <p> {{ GetTodosListData.filter(x=>x.status==true).length }} 個已完成項目</p>
