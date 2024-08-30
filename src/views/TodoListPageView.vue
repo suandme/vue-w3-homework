@@ -1,7 +1,7 @@
 <script setup>
 import router from '@/router';
 import axios from 'axios';
-import { computed, onMounted, ref} from "vue";
+import { computed, onMounted, onUpdated, ref} from "vue";
 import TodoList from  '@/components/TodoList.vue'
 //API
 const ApiUrl="https://todolist-api.hexschool.io/";
@@ -123,32 +123,24 @@ const PostTodosContenSend=async ()=>{
 
 }
 //6..代辦事項-更新代辦事項
-const ButtonStatus=ref(true);
-const PutTodosid=ref(0);
-const PutTodosConten=(todo)=>{
-  const EditConten={ ...todo}
-   PostTodosConten.value.content=EditConten.content;
-   PutTodosid.value=EditConten.id;
-   ButtonStatus.value=false;
-}
-const PutTodosContenSend=async ()=>{
+const PutSendstatus=ref(false);
+const PutTodosContenSend=async (content,id)=>{
 
 try {
  
-   const res = await axios.put(`${ApiUrl}todos/${PutTodosid.value}`,PostTodosConten.value, {
+   const res = await axios.put(`${ApiUrl}todos/${id}`,content, {
                           headers: {
                               Authorization:  CheckToken.value,
                           },
                       });
            if (res.data.status)
                 {
-                  ButtonStatus.value=true;
-                  PostTodosConten.value={ ...PostTodosConten};
+                  console.log(res.data.status);
+                  PutSendstatus.value=res.data.status;
                   alert(`${res.data.message}`);
                   GetTodosList();
                   
                 }
-
  
   } catch (error) {
   if (error.response.data!='')
@@ -229,9 +221,9 @@ const SingOut=()=>{
     <div class="todoList_Content">
       <div class="inputBox">
         <input type="text" placeholder="請輸入待辦事項" v-model="PostTodosConten.content"
-          @keyup.enter="ButtonStatus? PostTodosContenSend():PutTodosContenSend()">
-        <a href="#" @click.prevent="ButtonStatus? PostTodosContenSend():PutTodosContenSend()">
-          <i :class="ButtonStatus? 'fa fa-plus':'fa-solid fa-pen-to-square' "></i>
+          @keyup.enter="PostTodosContenSend()">
+        <a href="#" @click.prevent="PostTodosContenSend()">
+          <i class="fa fa-plus"></i>
         </a>
       </div>
       <span class="errorMsg" >{{TodosResMsg}}</span>
@@ -244,12 +236,14 @@ const SingOut=()=>{
         <div class="todoList_items">
           <span v-if="!filterTodosListData.length>0" >「目前尚無待辦事項」</span>
           <TodoList :list-todos="SortTodosListData" 
-          v-on:emit-edit="PutTodosConten" 
+         :put-status="PutSendstatus"
           v-on:emit-del="DeleteTodosConten"
-          v-on:emit-patch="PatchTodosContenSend" />      
-         
+          v-on:emit-patch="PatchTodosContenSend"
+          v-on:emit-put="PutTodosContenSend"
+         v-model:putStatus="PutSendstatus"
+          />      
           <div class="todoList_statistics" v-if="filterTodosListData.length>0">
-            <p> {{ GetTodosListData.filter(x=>x.status==true).length }} 個已完成項目</p>
+            <p> {{ GetTodosListData.filter(x=>x.status==false).length }} 待完成項目總數</p>
           </div>
         </div>
       </div>
